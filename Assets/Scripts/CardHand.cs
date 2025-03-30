@@ -3,12 +3,17 @@ using UnityEngine;
 
 public class CardHand : MonoBehaviour
 {
-    public List<GameObject> cards = new List<GameObject>();
-    public GameObject card;
-    public bool isDealer = false;
-    public int points;
-    private int coordY;    
-     
+    public List<GameObject> cards = new List<GameObject>();  // Lista de cartas en la mano
+                                                             // 手中的牌列表
+    public GameObject card; // Plantilla de carta para instanciar
+                            // 用于实例化的牌模板
+    public bool isDealer = false; // Si este objeto es el repartidor
+                                  // 该对象是否为庄家
+    public int points; // Puntos totales de la mano
+                       // 手上的总分
+    private int coordY; // Coordenada Y para la posición de las cartas
+                        // 牌的Y坐标位置
+
     private void Awake()
     {
         points = 0;
@@ -21,17 +26,22 @@ public class CardHand : MonoBehaviour
 
     public void Clear()
     {
-        points = 0;
+        points = 0; // Restablecer los puntos a 0
+                    // 重置分数为0
         if (!isDealer)
-            coordY = 3;
+            coordY = 3;  // Restablecer posición Y para las cartas del jugador
+                         // 重置玩家牌的Y位置
         else
-            coordY = -1;
+            coordY = -1; // Restablecer posición Y para las cartas del repartidor
+                         // 重置庄家牌的Y位置
         foreach (GameObject g in cards)
         {
-            Destroy(g);
+            Destroy(g); // Destruir el objeto de la carta
+                        // 销毁牌对象
         }
-        cards.Clear();                        
-    }        
+        cards.Clear(); // Limpiar la lista de cartas
+                       // 清空牌列表                        
+    }
 
     public void InitialToggle()
     {
