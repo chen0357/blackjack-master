@@ -254,15 +254,33 @@ public class Deck : MonoBehaviour
         stickButton.interactable = true;
         finalMessage.text = "";
 
+        // Limpiar las manos del jugador y del dealer
         player.GetComponent<CardHand>().Clear();
         dealer.GetComponent<CardHand>().Clear();
 
+        // Reestablecer la variable cardIndex a 0
         cardIndex = 0;
-        bet = 0; // La apuesta se reinicia, pero el dinero no
+
+        // Barajar las cartas nuevamente
         ShuffleCards();
 
-        gameStarted = false;  // Restablecer la bandera para la próxima ronda
-                              // Solo se reinicia la interfaz, no se reparten cartas automáticamente aquí
+        // Repartir cartas automáticamente al jugador y al dealer
+        PushPlayer(); // Repartir carta al jugador
+        PushDealer(); // Repartir carta al dealer
+        PushPlayer(); // Repartir segunda carta al jugador
+        PushDealer(); // Repartir segunda carta al dealer
+
+        // Mostrar la probabilidad de no pasarse
+        CalculateProbabilities();
+
+        // Mostrar las cartas en la UI (puedes agregar más lógica si es necesario para mostrar un "dealer" visible o algo por el estilo)
+        playerPointsText.text = "Puntos: " + player.GetComponent<CardHand>().points.ToString();
+
+        // Asegúrate de que el dinero del jugador está actualizado
+        UpdateMoneyDisplay();
+
+        // Marcar que el juego ha comenzado
+        gameStarted = true;
     }
 
 
@@ -293,7 +311,7 @@ public class Deck : MonoBehaviour
                 if (!gameStarted)
                 {
                     StartGame();  // Empezar el juego si no ha comenzado
-                    gameStarted = true;  // Marcar el juego como comenzado
+                    gameStarted = false;  // Marcar el juego como comenzado
                 }
             }
             else
@@ -306,11 +324,6 @@ public class Deck : MonoBehaviour
             Debug.Log("Cantidad de apuesta inválida.");
         }
     }
-
-
-
-
-
 
 
     // Finalizar ronda y actualizar dinero según el resultado
