@@ -14,6 +14,11 @@ public class CardHand : MonoBehaviour
     private int coordY; // Coordenada Y para la posición de las cartas
                         // 牌的Y坐标位置
 
+
+    public int bankroll = 1000;  // Banca inicial del jugador
+    public int bet = 0;          // Apuesta actual del jugador
+
+
     private void Awake()
     {
         points = 0;
@@ -27,21 +32,21 @@ public class CardHand : MonoBehaviour
     public void Clear()
     {
         points = 0; // Restablecer los puntos a 0
-                    // 重置分数为0
+
         if (!isDealer)
             coordY = 3;  // Restablecer posición Y para las cartas del jugador
-                         // 重置玩家牌的Y位置
         else
             coordY = -1; // Restablecer posición Y para las cartas del repartidor
-                         // 重置庄家牌的Y位置
+
         foreach (GameObject g in cards)
         {
-            Destroy(g); // Destruir el objeto de la carta
-                        // 销毁牌对象
+            Destroy(g); // Destruir las cartas de la ronda anterior
         }
         cards.Clear(); // Limpiar la lista de cartas
-                       // 清空牌列表                        
+
+        bet = 0; // Reiniciar la apuesta para la nueva ronda
     }
+
 
     public void InitialToggle()
     {
@@ -96,6 +101,34 @@ public class CardHand : MonoBehaviour
         points = val;
        
     }
-     
+
+    // Método para establecer la apuesta
+    public bool PlaceBet(int amount)
+    {
+        if (amount > 0 && amount <= bankroll && amount % 10 == 0) // Solo múltiplos de 10
+        {
+            bet = amount;
+            bankroll -= amount;
+            return true; // Apuesta válida
+        }
+        return false; // Apuesta inválida
+    }
+
+    // Método cuando el jugador gana
+    public void WinBet()
+    {
+        bankroll += bet * 2;  // Gana el doble de su apuesta
+        bet = 0; // Reiniciar apuesta
+    }
+
+    // Método cuando el jugador pierde
+    public void LoseBet()
+    {
+        bet = 0; // Reiniciar apuesta
+    }
+
+  
+
+
 
 }

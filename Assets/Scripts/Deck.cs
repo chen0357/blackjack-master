@@ -35,6 +35,12 @@ public class Deck : MonoBehaviour
     private int playerMoney = 1000; // Dinero inicial del jugador
                                     // 玩家初始金额
 
+    private int bet = 0; // Variable de apuesta
+
+    private bool gameStarted = false;  // Bandera para verificar si el juego ha comenzado
+
+
+
     // Inicialización al inicio del script
     // 脚本启动时的初始化
     private void Awake()
@@ -95,18 +101,20 @@ public class Deck : MonoBehaviour
     // 开始游戏并发牌
     void StartGame()
     {
-        for (int i = 0; i < 2; i++)
+        // Repartir cartas solo si es la primera vez que se juega
+        if (!gameStarted)
         {
-            PushPlayer(); // Repartir carta al jugador
-                          // 给玩家发牌
-            PushDealer(); // Repartir carta al repartidor
-                          // 给庄家发牌
-            CheckInitialBlackjack(); // Comprobar si hay Blackjack inicial
-                                     // 检查初始是否有黑杰克
+            for (int i = 0; i < 2; i++)
+            {
+                PushPlayer(); // Repartir carta al jugador
+                PushDealer(); // Repartir carta al repartidor
+            }
+
+            CalculateProbabilities(); // Calcular probabilidad inicial después de repartir
+            gameStarted = true; // Marcar el juego como iniciado
         }
-        CalculateProbabilities(); // Calcular probabilidad inicial después de repartir
-                                  // 发完初始牌后显示初始概率
     }
+
 
     // Comprobar si hay Blackjack al inicio del juego
     // 检查游戏开始时是否有黑杰克
@@ -217,15 +225,26 @@ public class Deck : MonoBehaviour
         else if (dealerTotal > 21 || playerTotal > dealerTotal)
         {
             finalMessage.text = "¡Ganaste!";
+            playerMoney += bet * 2;  // Se duplica la apuesta ganada
         }
-        else if (dealerTotal >= playerTotal)
+        else if (dealerTotal == playerTotal)
+        {
+            finalMessage.text = "Empate";
+            playerMoney += bet;  // Recupera la apuesta
+        }
+        else
         {
             finalMessage.text = "¡Perdiste!";
         }
 
+        bet = 0; // Reiniciar la apuesta para la siguiente ronda
         hitButton.interactable = false;
         stickButton.interactable = false;
+
+        UpdateMoneyDisplay(); // Asegurar que la UI se actualice
     }
+
+
 
     // Método para jugar de nuevo
     // 再玩一次的方法
@@ -234,61 +253,65 @@ public class Deck : MonoBehaviour
         hitButton.interactable = true;
         stickButton.interactable = true;
         finalMessage.text = "";
+
         player.GetComponent<CardHand>().Clear();
         dealer.GetComponent<CardHand>().Clear();
+
         cardIndex = 0;
-        ShuffleCards(); // Barajar cartas
-                        // 洗牌
-        StartGame(); // Comenzar juego
-                     // 开始游戏
-        CalculateProbabilities(); // Calcular probabilidad inicial después de repartir
-                                  // 发完初始牌后显示初始概率
+        bet = 0; // La apuesta se reinicia, pero el dinero no
+        ShuffleCards();
+
+        gameStarted = false;  // Restablecer la bandera para la próxima ronda
+                              // Solo se reinicia la interfaz, no se reparten cartas automáticamente aquí
     }
+
+
+
 
     // Actualizar visualización del dinero
     // 更新金额显示
-    private void UpdateMoneyDisplay()
+    void UpdateMoneyDisplay()
     {
         jingeText.text = "Dinero: " + playerMoney.ToString();
     }
 
     // Método para apostar
     // 押注的方法
+    // Método para apostar
     public void Bet()
     {
         int betAmount;
-        if (int.TryParse(betInputField.text, out betAmount) && betAmount % 10 == 0 && betAmount <= playerMoney)
+        if (int.TryParse(betInputField.text, out betAmount) && betAmount % 10 == 0 && betAmount <= playerMoney && betAmount > 0)
         {
-            if (!hitButton.interactable && !stickButton.interactable)
+            if (bet == 0) // Si no hay una apuesta en curso
             {
-                playerMoney -= betAmount; // Restar la cantidad apostada del dinero del jugador
-                                          // 从玩家金额中扣除押注
-                UpdateMoneyDisplay(); // Actualizar visualización del dinero
-                                      // 更新金额显示
-                PlayAgain(); // Jugar de nuevo
-                             // 再玩一次
-                StartCoroutine(EndRound(betAmount)); // Finalizar ronda y actualizar dinero según el resultado
-                                                     // 结束回合并根据结果更新金额
+                playerMoney -= betAmount; // Restar dinero apostado
+                bet = betAmount; // Registrar la apuesta
+                UpdateMoneyDisplay(); // Actualizar UI del dinero
+
+                // Asegúrate de que el juego no se haya iniciado antes
+                if (!gameStarted)
+                {
+                    StartGame();  // Empezar el juego si no ha comenzado
+                    gameStarted = true;  // Marcar el juego como comenzado
+                }
             }
             else
             {
-                Debug.Log("Juego en curso. Termina el juego actual antes de realizar una nueva apuesta.");
-                // 游戏进行中。请在开始新的押注之前结束当前游戏。
+                Debug.Log("Ya has realizado una apuesta. Espera a que termine la ronda.");
             }
         }
         else
         {
-            Debug.Log("Cantidad de apuesta inválida. Debe ser un múltiplo de 10 y menor o igual a tu dinero actual.");
-            // 押注数额无效。必须是 10 的倍数且不超过当前金额。
-            // Asegurar que el estado de los botones sea correcto para permitir al usuario intentarlo de nuevo
-            // 确保按钮状态正确，以便用户可以再次尝试
-            if (finalMessage.text == "")
-            {
-                hitButton.interactable = true;
-                stickButton.interactable = true;
-            }
+            Debug.Log("Cantidad de apuesta inválida.");
         }
     }
+
+
+
+
+
+
 
     // Finalizar ronda y actualizar dinero según el resultado
     // 结束回合并根据结果更新金额
@@ -332,5 +355,8 @@ public class Deck : MonoBehaviour
         probMessage.text = $"Probabilidad de no pasarse: {probability:F1}%";
         // 显示不会爆牌的概率（保留 1 位小数）
     }
+
+   
+
 
 }
